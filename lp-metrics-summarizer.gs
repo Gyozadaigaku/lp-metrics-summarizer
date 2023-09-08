@@ -32,6 +32,9 @@ function runLPReport() {
   dateRange.startDate = START_DATE;
   dateRange.endDate = END_DATE;
 
+  // console.log("dateRange")
+  // console.log(dateRange)
+
   const request = AnalyticsData.newRunReportRequest();
   request.dimensions = dimensions;
   request.metrics = metrics;
@@ -55,9 +58,9 @@ function runLPReport() {
     const firstFilterCondition = [];
 
     for (let i = 2; i < lastColumn; i += 2) {
-      eventDataTmp.set(`${sheet.getRange(5, i).getValue()}`, 0);
+      eventDataTmp.set(`${sheet.getRange(5, i).getValue()}${i / 2}`, 0);
       eventDataTmp.set(`completionRate${i / 2}`, "");
-      firstFilterCondition.push(sheet.getRange(5, i).getValue());
+      firstFilterCondition.push(`${sheet.getRange(5, i).getValue()}${i / 2}`);
     }
 
     // console.log([...eventDataTmp.entries()]);
@@ -109,13 +112,20 @@ function runLPReport() {
         (acc, curr) => acc + parseInt(curr.value),
         0
       );
-      eventData[eventName][filterConditionsObject[propertyName][0]] +=
-        metricValueSum;
+      eventData[eventName][propertyName] += metricValueSum;
     }
 
     for (const row of report.rows) {
       const eventName = row.dimensionValues[0].value;
       const landingPagePath = row.dimensionValues[1].value;
+      //            if(eventName === "mcv_input_start_cb"){
+      // // console.log("eventName")
+      // // console.log(eventName)
+      // console.log("row")
+      // console.log(row)
+      // console.log("landingPagePath")
+      // console.log(row.dimensionValues[1].value)
+      // }
 
       if (
         !eventData[eventName] &&
@@ -125,12 +135,10 @@ function runLPReport() {
           eventName: eventName,
           ...obj,
         };
-        continue;
       }
 
       for (const propertyName of firstFilterCondition) {
         const conditions = filterConditionsObject[propertyName];
-
         if (conditions.length === 2) {
           if (
             conditions[1] === "全体" &&
@@ -143,10 +151,8 @@ function runLPReport() {
           ) {
             updateEventData(eventData, eventName, propertyName, row);
           }
-          continue;
-        }
-
-        if (conditions.length === 3) {
+          // continue;
+        } else if (conditions.length === 3) {
           if (
             conditions[1] === "全体" &&
             landingPagePath.includes(conditions[0]) &&
